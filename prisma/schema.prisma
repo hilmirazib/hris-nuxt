@@ -1,0 +1,119 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Company {
+  id            Int           @id @default(autoincrement())
+  name          String
+  acronym       String?       @unique
+  color         String? // tema per company
+  logo          String? // path logo
+  parentId      Int?
+  parent        Company?      @relation("CompanyHierarchy", fields: [parentId], references: [id])
+  children      Company[]     @relation("CompanyHierarchy")
+  departments   Department[]
+  employees     Employee[]
+  positions     Position[]
+  roleCompanies RoleCompany[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Department {
+  id        Int              @id @default(autoincrement())
+  name      String
+  acronym   String?
+  companyId Int
+  company   Company          @relation(fields: [companyId], references: [id])
+  employees Employee[]
+  roleDepts RoleDepartment[]
+}
+
+model Position {
+  id        Int        @id @default(autoincrement())
+  title     String
+  level     Int // mirip hierarchy rank
+  acronym   String?
+  companyId Int
+  company   Company    @relation(fields: [companyId], references: [id])
+  employees Employee[]
+}
+
+model Role {
+  id            Int              @id @default(autoincrement())
+  name          String
+  acronym       String?
+  // role global (template) — tidak terikat langsung ke company
+  roleCompanies RoleCompany[]
+  roleDepts     RoleDepartment[]
+  rolePerms     RolePermission[]
+  users         Employee[]       @relation("EmployeeRole")
+}
+
+model Permission {
+  id          Int              @id @default(autoincrement())
+  slug        String           @unique
+  description String?
+  category    String?
+  rolePerms   RolePermission[]
+}
+
+model RolePermission {
+  id           Int        @id @default(autoincrement())
+  roleId       Int
+  permissionId Int
+  role         Role       @relation(fields: [roleId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@unique([roleId, permissionId])
+}
+
+model RoleCompany {
+  id        Int     @id @default(autoincrement())
+  roleId    Int
+  companyId Int
+  role      Role    @relation(fields: [roleId], references: [id])
+  company   Company @relation(fields: [companyId], references: [id])
+
+  @@unique([roleId, companyId])
+}
+
+model RoleDepartment {
+  id           Int        @id @default(autoincrement())
+  roleId       Int
+  departmentId Int
+  role         Role       @relation(fields: [roleId], references: [id])
+  department   Department @relation(fields: [departmentId], references: [id])
+
+  @@unique([roleId, departmentId])
+}
+
+model Employee {
+  id           Int         @id @default(autoincrement())
+  name         String
+  email        String      @unique
+  passwordHash String
+  serviceName  String? // "nama panggilan" (analog servicename)
+  companyId    Int
+  departmentId Int?
+  positionId   Int?
+  company      Company     @relation(fields: [companyId], references: [id])
+  department   Department? @relation(fields: [departmentId], references: [id])
+  position     Position?   @relation(fields: [positionId], references: [id])
+  roleId       Int?
+  role         Role?       @relation("EmployeeRole", fields: [roleId], references: [id])
+  isDeleted    Boolean     @default(false)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
