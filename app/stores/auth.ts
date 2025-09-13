@@ -1,18 +1,22 @@
 import { defineStore } from 'pinia'
-import { authService } from '@/services/auth.service'
+import type { AuthResponse, Employee } from '../types/auth';
+import { authService } from '../services/auth.service';
 
 export const useAuthStore = defineStore('auth', {
-  state: () => ({ user: null as any, token: '' }),
+  state: () => ({ user: null as Employee | null, token: '' }),
   actions: {
     async login(payload: { email: string; password: string }) {
-      const res = await authService.login(payload)
-      if (res?.success) this.token = (res.data as any).token
-      // (opsional) panggil me()
+      const res: AuthResponse = await authService.login(payload)
+      if (res?.success && res.data) {
+        this.token = res.data.token
+        // (opsional) panggil me()
+      }
     },
     async logout() {
       await authService.logout()
-      this.user = null; this.token = ''
+      this.user = null
+      this.token = ''
     }
   },
-  persist: true as any
 })
+

@@ -1,7 +1,8 @@
-import { LoginSchema } from '~/server/schemas/auth'
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import { LoginSchema } from '../../schemas/auth'
+import { defineEventHandler } from 'h3'
 
 const prisma = new PrismaClient()
 

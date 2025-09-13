@@ -1,5 +1,6 @@
 import { storeToRefs } from 'pinia'
-import { useAuthStore } from '@/stores/auth'
+import { useAuthStore } from '../stores/auth'
+import { computed } from 'vue'
 export const useAuth = () => {
   const store = useAuthStore()
   const { user, token } = storeToRefs(store)
