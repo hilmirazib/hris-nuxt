@@ -1,9 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcrypt'
-import jwt from 'jsonwebtoken'
 import { LoginSchema } from '../../schemas/auth'
-import { defineEventHandler } from 'h3'
-
 const prisma = new PrismaClient()
 
 export default defineEventHandler(async (event) => {
@@ -11,22 +8,23 @@ export default defineEventHandler(async (event) => {
   const parsed = LoginSchema.safeParse(body)
   if (!parsed.success) {
     setResponseStatus(event, 400)
-    return { success: false, error: { message: 'Invalid payload' } }
+    return fail('Invalid payload', 'VALIDATION_ERROR', 400)
   }
+
   const { email, password } = parsed.data
   const user = await prisma.employee.findUnique({ where: { email } })
-  if (!user) {
+  if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
     setResponseStatus(event, 401)
-    return { success: false, error: { message: 'Invalid credentials' } }
+    return fail('Invalid credentials', 'AUTH_INVALID', 401)
   }
-  const ok = await bcrypt.compare(password, user.passwordHash)
-  if (!ok) {
-    setResponseStatus(event, 401)
-    return { success: false, error: { message: 'Invalid credentials' } }
-  }
+
   const config = useRuntimeConfig()
-  const token = jwt.sign({ sub: user.id }, config.jwtSecret, { expiresIn: '1d' })
-  // (opsional) set cookie HttpOnly
-  setCookie(event, 'token', token, { httpOnly: true, sameSite: 'lax', secure: false, maxAge: 86400 })
-  return { success: true, data: { token } }
+  const token = signJwt({ sub: user.id }, config.jwtSecret as string, 60 * 60 * 24)
+
+  setCookie(event, 'token', token, {
+    httpOnly: true, sameSite: 'lax', secure: false, path: '/', maxAge: 60 * 60 * 24
+  })
+
+  // hanya kirim data aman ke client; detail lengkap distandardkan via transformer di repo
+  return ok({ token }) // bisa juga kembalikan profile ringkas kalau mau
 })

@@ -2,7 +2,8 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  modules: ['@nuxt/eslint', '@nuxt/image', '@nuxt/test-utils', '@pinia/nuxt', '@nuxtjs/i18n'],
+  modules: ['@nuxt/eslint', '@nuxt/image', '@nuxt/test-utils', '@pinia/nuxt', '@nuxtjs/i18n', 'vuetify-nuxt-module'],
+  css: ['@mdi/font/css/materialdesignicons.css'],
   ssr: true,
   typescript: { strict: true },
   i18n: {
