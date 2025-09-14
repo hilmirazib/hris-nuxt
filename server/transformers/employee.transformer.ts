@@ -1,5 +1,7 @@
+import type { Employee } from '@prisma/client'
+
 export const EmployeeTransformer = {
-  one: (e: any) => ({
+  one: (e: Employee) => ({
     id: e.id,
     name: e.name,
     email: e.email,
@@ -8,5 +10,6 @@ export const EmployeeTransformer = {
     departmentId: e.departmentId,
     positionId: e.positionId,
     roleId: e.roleId,
-  })
+  }),
+  collection: (employees: Employee[]) => employees.map((e) => EmployeeTransformer.one(e))
 }
