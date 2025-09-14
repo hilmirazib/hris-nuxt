@@ -16,10 +16,10 @@ export default defineEventHandler(async (event) => {
   if (!parsed.success) { setResponseStatus(event, 400); return fail('Invalid payload', 'VALIDATION_ERROR', 400) }
 
   const { name, email, password } = parsed.data
-  const exists = await prisma.user.findUnique({ where: { email } })
+  const exists = await prisma.employee.findUnique({ where: { email } })
   if (exists) { setResponseStatus(event, 409); return fail('Email in use', 'EMAIL_EXISTS', 409) }
 
   const passwordHash = await bcrypt.hash(password, 10)
-  const user = await prisma.user.create({ data: { name, email, passwordHash } })
-  return ok({ id: user.id })
+  const employee = await prisma.employee.create({ data: { name, email, passwordHash } })
+  return ok({ id: employee.id })
 })

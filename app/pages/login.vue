@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { navigateTo, ref } from '../../.nuxt/imports'
+import { ref } from 'vue'
 import { useAuth } from '../composables/useAuth'
 
 definePageMeta({ layout: 'auth'})
@@ -25,7 +25,6 @@ const onSubmit = async () => {
   loading.value = false
 
   if (res?.success) {
-    // redirect ke dashboard/admin
     return navigateTo('/admin')
   } else {
     // tampilkan pesan error sederhana
@@ -33,7 +32,6 @@ const onSubmit = async () => {
   }
 }
 
-// jika sudah login, langsung lempar ke /admin
 if (isAuthenticated.value) navigateTo('/admin')
 </script>
 

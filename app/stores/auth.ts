@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import type { Employee } from '@prisma/client'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
