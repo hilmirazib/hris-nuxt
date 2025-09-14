@@ -2,12 +2,15 @@
 import { navigateTo, ref } from '../../.nuxt/imports'
 import { useAuth } from '../composables/useAuth'
 
+definePageMeta({ layout: 'auth'})
+
 const { login, isAuthenticated } = useAuth()
 const loading = ref(false)
 const email = ref('')
 const password = ref('')
 const showPass = ref(false)
 const valid = ref(false)
+const { success, error, withPromise } = useNotifier()
 
 const rules = {
   required: (v: any) => !!v || 'Required',
@@ -26,7 +29,7 @@ const onSubmit = async () => {
     return navigateTo('/admin')
   } else {
     // tampilkan pesan error sederhana
-    alert(res?.error?.message ?? 'Login failed')
+    // error(res?.error?.message ?? 'Login failed')
   }
 }
 

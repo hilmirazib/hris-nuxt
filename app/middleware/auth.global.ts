@@ -1,5 +1,3 @@
-import { useAuth } from "../composables/useAuth"
-import { defineNuxtRouteMiddleware, navigateTo } from 'nuxt/app'
 export default defineNuxtRouteMiddleware(async (to) => {
   const { isAuthenticated, verify } = useAuth()
 

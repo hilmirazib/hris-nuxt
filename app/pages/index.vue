@@ -1,14 +1,14 @@
+<!-- app.vue -->
 <template>
-  <div>
-    <h1>Welcome to the Home Page!</h1>
-    <p>This is your application's home page content.</p>
-  </div>
+  <!-- vuetify -->
+  <v-container class="text-center">
+    <h1>Welcome to HRIS Application</h1>
+    <p>This is the home page. Please login to access admin features.</p>
+  </v-container>
+  
 </template>
 
 <script setup lang="ts">
-// You can add page-specific logic here
-</script>
+definePageMeta({ layout: 'auth'})
 
-<style scoped>
-/* You can add page-specific styles here */
-</style>
+</script>

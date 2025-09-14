@@ -1,30 +1,50 @@
+// server/api/auth/login.post.ts
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcrypt'
+import { createError } from 'h3'
+import { handle } from '../../../server/utils/handler' // sesuaikan path jika berbeda
+import { signJwt } from '../../../server/utils/jwt'
 import { LoginSchema } from '../../schemas/auth'
+
 const prisma = new PrismaClient()
 
-export default defineEventHandler(async (event) => {
-  const body = await readBody(event)
-  const parsed = LoginSchema.safeParse(body)
-  if (!parsed.success) {
-    setResponseStatus(event, 400)
-    return fail('Invalid payload', 'VALIDATION_ERROR', 400)
-  }
+export default defineEventHandler((event) =>
+  handle(event, async () => {
+    // 1) Validasi (biarkan Zod melempar error -> ditangani handler)
+    const body = await readBody(event)
+    const { email, password } = LoginSchema.parse(body)
 
-  const { email, password } = parsed.data
-  const user = await prisma.employee.findUnique({ where: { email } })
-  if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-    setResponseStatus(event, 401)
-    return fail('Invalid credentials', 'AUTH_INVALID', 401)
-  }
+    // 2) Cari user & verifikasi password
+    const user = await prisma.employee.findUnique({ where: { email } })
+    const ok = user && (await bcrypt.compare(password, user.passwordHash))
+    if (!ok) {
+      // Ditangani oleh handler sebagai error H3 dengan statusCode
+      throw createError({
+        statusCode: 401,
+        statusMessage: 'Invalid credentials',
+        data: { code: 'AUTH_INVALID' },
+      })
+    }
 
-  const config = useRuntimeConfig()
-  const token = signJwt({ sub: user.id }, config.jwtSecret as string, 60 * 60 * 24)
+    // 3) Buat JWT & set cookie
+    const config = useRuntimeConfig()
+    const token = signJwt({ sub: user.id }, config.jwtSecret as string, 60 * 60 * 24)
 
-  setCookie(event, 'token', token, {
-    httpOnly: true, sameSite: 'lax', secure: false, path: '/', maxAge: 60 * 60 * 24
-  })
+    setCookie(event, 'token', token, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      path: '/',
+      maxAge: 60 * 60 * 24,
+    })
 
-  // hanya kirim data aman ke client; detail lengkap distandardkan via transformer di repo
-  return ok({ token }) // bisa juga kembalikan profile ringkas kalau mau
-})
+    // 4) Kembalikan data yang perlu (handler akan bungkus: { success: true, data })
+    return {
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      },
+    }
+  }),
+)
